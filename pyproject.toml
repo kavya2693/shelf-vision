@@ -1,0 +1,55 @@
+[project]
+name = "shelf-vision"
+version = "0.1.0"
+description = "CCTV planogram compliance: a small detector, deterministic slot matching, LangGraph merchandising agents and a 3D store twin"
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }
+dependencies = [
+    "langgraph>=1.2",
+    "langchain-openai>=0.3",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pillow>=10.4",
+    "opencv-python-headless>=4.10",
+    "ultralytics>=8.3",
+    "torch>=2.5,<2.9",
+    "torchvision<0.24",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+]
+
+[project.scripts]
+shelf-vision = "shelf_vision.cli:main"
+shelf-vision-api = "shelf_vision.api:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15",
+    "pytest>=8.3",
+    "ruff>=0.11",
+    "httpx>=0.27",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shelf_vision"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = ["twin"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src"]
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
