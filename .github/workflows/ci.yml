@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - run: uv sync --locked
+
+      - name: lint
+        run: uv run ruff check .
+
+      - name: format
+        run: uv run ruff format --check .
+
+      - name: types
+        run: uv run mypy
+
+      # No model is called: the tests replay ground-truth boxes through the oracle detector
+      # and stub the briefing model, and every task decision is deterministic.
+      - name: tests
+        run: uv run pytest -q
+
+      # The shipped weights are used as-is; training on CI runners is too slow.
+      - name: end-to-end run with the shipped detector
+        run: |
+          uv run shelf-vision generate
+          uv run shelf-vision detect
+          uv run shelf-vision eval
+          uv run shelf-vision run
+
+  twin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: twin
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: twin/package-lock.json
+      - run: npm ci
+      - run: npm run build
