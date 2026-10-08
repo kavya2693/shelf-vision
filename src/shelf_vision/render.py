@@ -135,22 +135,23 @@ def camera_homography(rng: np.random.Generator) -> np.ndarray:
     shift = rng.uniform(-0.03, 0.03)
     near_x, far_x = (0, 1) if side > 0 else (1, 0)
     xs = {near_x: 0.0, far_x: depth}
-    src = np.float32([[0, 0], [w, 0], [w, h], [0, h]])
-    dst = np.float32(
+    src = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype=np.float32)
+    dst = np.array(
         [
             [w * (xs[0] + tilt + shift), h * (xs[0] * 0.9)],
             [w * (1 - xs[1] - tilt + shift), h * (xs[1] * 0.9)],
             [w * (1 - xs[1] + shift), h * (1 - xs[1] * 0.9)],
             [w * (xs[0] + shift), h * (1 - xs[0] * 0.9)],
-        ]
+        ],
+        dtype=np.float32,
     )
-    return cv2.getPerspectiveTransform(src, dst)
+    return np.asarray(cv2.getPerspectiveTransform(src, dst), dtype=np.float64)
 
 
 def warp_rect(h: np.ndarray, rect: tuple[float, float, float, float]) -> tuple[float, float, float, float]:
     x0, y0, x1, y1 = rect
-    pts = np.float32([[[x0, y0], [x1, y0], [x1, y1], [x0, y1]]])
-    out = cv2.perspectiveTransform(pts, h)[0]
+    pts = np.array([[[x0, y0], [x1, y0], [x1, y1], [x0, y1]]], dtype=np.float64)
+    out = np.asarray(cv2.perspectiveTransform(pts, h))[0]
     return float(out[:, 0].min()), float(out[:, 1].min()), float(out[:, 0].max()), float(out[:, 1].max())
 
 
@@ -173,7 +174,7 @@ def _shade(rgb: tuple[int, int, int], k: float) -> tuple[int, int, int]:
 
 
 def draw_pack(d: ImageDraw.ImageDraw, sku: Sku, rect: tuple[float, float, float, float]) -> None:
-    x0, y0, x1, y1 = (int(round(v)) for v in rect)
+    x0, y0, x1, y1 = (round(v) for v in rect)
     w, h = x1 - x0, y1 - y0
     base, dark, light = sku.rgb, _shade(sku.rgb, 0.6), _shade(sku.rgb, 1.25)
     shape = sku.shape
@@ -217,7 +218,7 @@ def draw_pack(d: ImageDraw.ImageDraw, sku: Sku, rect: tuple[float, float, float,
 
 
 def draw_tag(d: ImageDraw.ImageDraw, rect: tuple[float, float, float, float], price: float) -> None:
-    x0, y0, x1, y1 = (int(round(v)) for v in rect)
+    x0, y0, x1, y1 = (round(v) for v in rect)
     d.rectangle([x0, y0, x1, y1], fill=(250, 250, 245), outline=(120, 120, 120))
     d.rectangle([x0, y0, x0 + 4, y1], fill=(230, 60, 60))
     d.text((x0 + 7, y0 + 1), f"{price:.2f}", fill=(20, 20, 20), font=_font(max(6, (y1 - y0) - 3)))
@@ -232,7 +233,6 @@ def render_frontal(
     back = tuple(int(v) for v in rng.integers(40, 75, size=3))
     img = Image.new("RGB", (IMG_W, IMG_H), wall)  # type: ignore[arg-type]
     d = ImageDraw.Draw(img)
-    s, ox, oy = frontal_scale()
     bx0, by0, bx1, by1 = mm_to_px((0, 0, BAY_WIDTH_MM, BAY_HEIGHT_MM))
     d.rectangle([0, by1, IMG_W, IMG_H], fill=floor)  # type: ignore[arg-type]
     d.rectangle([bx0 - 4, by0 - 4, bx1 + 4, by1 + 4], fill=(90, 90, 95))  # bay frame
@@ -307,8 +307,13 @@ def draw_occluders(img: Image.Image, occluders: list[Occluder]) -> list[Box]:
             w = o.x1 - o.x0
             head = int(w * 0.55)
             d.rounded_rectangle([o.x0, o.y0 + head, o.x1, o.y1], radius=w // 3, fill=o.rgb)
-            d.ellipse([o.x0 + (w - head) // 2, o.y0, o.x0 + (w + head) // 2, o.y0 + head], fill=(190, 150, 120))
-            d.rectangle([o.x0 + w // 3, o.y0 + int((o.y1 - o.y0) * 0.55), o.x1 - w // 3, o.y1], fill=_shade(o.rgb, 0.7))
+            d.ellipse(
+                [o.x0 + (w - head) // 2, o.y0, o.x0 + (w + head) // 2, o.y0 + head], fill=(190, 150, 120)
+            )
+            d.rectangle(
+                [o.x0 + w // 3, o.y0 + int((o.y1 - o.y0) * 0.55), o.x1 - w // 3, o.y1],
+                fill=_shade(o.rgb, 0.7),
+            )
         else:
             d.rectangle([o.x0, o.y0, o.x1, o.y1 - 6], outline=(70, 70, 80), width=2, fill=o.rgb)
             for k in range(1, 6):

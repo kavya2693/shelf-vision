@@ -197,7 +197,9 @@ def generate_sequences(planogram: Planogram, catalog: list[Sku], seed: int = SEE
                     "tag": st.tag,
                     "occluded": round(occluded, 3),
                 }
-            frames.append({"t": t, "slots": slots, "boxes": [b.to_dict() for b in boxes], "shoppers": len(occ)})
+            frames.append(
+                {"t": t, "slots": slots, "boxes": [b.to_dict() for b in boxes], "shoppers": len(occ)}
+            )
         truth["cameras"][cam.camera_id] = {
             "bay_id": bay.bay_id,
             "events": [{"frame": f, "slot_id": s.slot_id, "fault": ft} for f, s, ft in events],
@@ -213,7 +215,7 @@ def generate(seed: int = SEED, training: bool = True) -> dict:
     save_catalog(catalog)
     plan = build_planogram(catalog, seed)
     counts = generate_training_set(catalog, seed) if training else {}
-    truth = generate_sequences(plan, catalog, seed)
+    generate_sequences(plan, catalog, seed)
     save_planogram(plan)  # after sequences, so camera homographies are recorded
     return {"skus": len(catalog), "slots": len(plan.slots), "cameras": len(plan.cameras), **counts}
 

@@ -88,8 +88,8 @@ def build_catalog(seed: int = SEED) -> list[Sku]:
             cost = round(fam.unit_cost * rng.uniform(0.7, 1.4), 2)
             # Some SKUs have no stock anywhere, so the inventory agent has to raise a replenishment.
             stocked = rng.random()
-            backroom = 0 if stocked < 0.3 else int(rng.integers(4, 40))
-            dc = 0 if stocked < 0.12 else int(rng.integers(50, 400))
+            backroom = 0 if stocked < 0.4 else int(rng.integers(4, 40))
+            dc = 0 if stocked < 0.22 else int(rng.integers(50, 400))
             out.append(
                 Sku(
                     sku=f"RTL-{i:04d}",

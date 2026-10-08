@@ -188,7 +188,9 @@ def build_planogram(catalog: list[Sku], seed: int = SEED) -> Planogram:
             bay = Bay(bay_id, aisle + 1, side, cam_id, fams)
             fill_bay(bay, catalog, rng)
             bays.append(bay)
-            cameras.append(Camera(cam_id, bay_id, [], f"Aisle {aisle + 1} {'left' if side == 'L' else 'right'}"))
+            cameras.append(
+                Camera(cam_id, bay_id, [], f"Aisle {aisle + 1} {'left' if side == 'L' else 'right'}")
+            )
     return Planogram("Store 01", bays, cameras)
 
 

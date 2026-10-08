@@ -58,9 +58,12 @@ class YoloDetector:
         self.conf = conf
 
     def detect(self, image: Path) -> list[Detection]:
-        res = self.model.predict(str(image), imgsz=IMGSZ, conf=self.conf, device="cpu", verbose=False)[0]
+        results: Any = self.model.predict(
+            str(image), imgsz=IMGSZ, conf=self.conf, device="cpu", verbose=False
+        )
+        res = results[0]
         out = []
-        for b in res.boxes:
+        for b in res.boxes or []:
             cls = CLASS_NAMES[int(b.cls.item())]
             x0, y0, x1, y1 = (float(v) for v in b.xyxy[0].tolist())
             out.append(Detection(cls, float(b.conf.item()), (x0, y0, x1, y1)))
@@ -140,7 +143,9 @@ def train(epochs: int = EPOCHS, imgsz: int = IMGSZ, data_yaml: Path = DATA_YAML)
     return metrics
 
 
-def evaluate(weights: Path = WEIGHTS, imgsz: int = IMGSZ, data_yaml: Path = DATA_YAML, split: str = "test") -> dict:
+def evaluate(
+    weights: Path = WEIGHTS, imgsz: int = IMGSZ, data_yaml: Path = DATA_YAML, split: str = "test"
+) -> dict:
     from ultralytics import YOLO
 
     model = YOLO(str(weights))
