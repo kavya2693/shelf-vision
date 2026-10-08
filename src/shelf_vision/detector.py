@@ -97,8 +97,8 @@ class CachedDetector:
         self.name = self.cache.get("detector", "cached")
 
     def detect(self, image: Path) -> list[Detection]:
-        cam, t = image.parent.name, image.stem.split("_")[1]
-        return [Detection.from_dict(d) for d in self.cache["frames"][cam][t]]
+        cam, t = image.parent.name, int(image.stem.split("_")[1])
+        return [Detection.from_dict(d) for d in self.cache["frames"][cam][str(t)]]
 
 
 def train(epochs: int = EPOCHS, imgsz: int = IMGSZ, data_yaml: Path = DATA_YAML) -> dict[str, Any]:

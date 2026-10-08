@@ -246,6 +246,8 @@ class Twin:
                     "short": sku.short,
                     "rgb": list(sku.rgb),
                     "facings": s.facings,
+                    "pack_w": s.pack_w,
+                    "pack_h": s.pack_h,
                     "status": self.statuses.get(s.slot_id, "ok"),
                     "confidence": self.confidences.get(s.slot_id),
                     "task_id": task["task_id"] if task else None,

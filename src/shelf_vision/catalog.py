@@ -76,6 +76,9 @@ def _hsv_to_rgb(h: float, s: float, v: float) -> tuple[int, int, int]:
 
 def build_catalog(seed: int = SEED) -> list[Sku]:
     rng = np.random.default_rng(seed)
+    # Stock levels come from their own stream, so changing the stocking policy never changes
+    # the colours and pack sizes the detector was trained on.
+    stock_rng = np.random.default_rng(seed + 7)
     out: list[Sku] = []
     i = 0
     for fam in FAMILIES:
@@ -87,9 +90,12 @@ def build_catalog(seed: int = SEED) -> list[Sku]:
             size = rng.uniform(0.85, 1.15)
             cost = round(fam.unit_cost * rng.uniform(0.7, 1.4), 2)
             # Some SKUs have no stock anywhere, so the inventory agent has to raise a replenishment.
-            stocked = rng.random()
-            backroom = 0 if stocked < 0.4 else int(rng.integers(4, 40))
-            dc = 0 if stocked < 0.22 else int(rng.integers(50, 400))
+            stocked = stock_rng.random()
+            backroom, dc = int(stock_rng.integers(4, 40)), int(stock_rng.integers(50, 400))
+            if stocked < 0.4:
+                backroom = 0
+            if stocked < 0.22:
+                dc = 0
             out.append(
                 Sku(
                     sku=f"RTL-{i:04d}",
