@@ -13,5 +13,5 @@
 [x] .env.example present, no real values
 [x] prepush-scan clean
 [x] 10+ incremental commits
-[ ] Public repo (not pushed by design)
+[x] Public repo
 ```
